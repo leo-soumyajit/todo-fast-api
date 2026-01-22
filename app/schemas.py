@@ -1,6 +1,9 @@
-from pydantic import BaseModel, EmailStr
-from typing import Optional
+from pydantic import BaseModel, EmailStr, Field, BeforeValidator
+from typing import Optional, Annotated
 from datetime import datetime
+
+# --- MAGIC FIX: ObjectId ko String banane ke liye ---
+PyObjectId = Annotated[str, BeforeValidator(str)]
 
 # --- User Schemas ---
 class UserCreate(BaseModel):
@@ -9,10 +12,10 @@ class UserCreate(BaseModel):
     password: str
 
 class UserResponse(BaseModel):
-    id: str
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
     username: str
     email: EmailStr
-    
+
 # --- Todo Schemas ---
 class TodoCreate(BaseModel):
     title: str
@@ -24,11 +27,15 @@ class TodoUpdate(BaseModel):
     completed: Optional[bool] = None
 
 class TodoResponse(BaseModel):
-    id: str
+    id: PyObjectId   # <--- FIX: alias="_id" hata diya hai
     title: str
-    description: Optional[str]
+    description: Optional[str] = None
     completed: bool
-    created_at: datetime
+    created_at: Optional[datetime] = None
+
+    class Config:
+        populate_by_name = True
+        from_attributes = True
 
 # --- Token Schema ---
 class Token(BaseModel):
